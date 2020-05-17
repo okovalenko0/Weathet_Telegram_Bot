@@ -11,6 +11,7 @@ using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Collections.Generic;
+using WeahetBot;
 
 namespace WeatherBot
 {
@@ -74,7 +75,7 @@ namespace WeatherBot
 
         private static KeyboardButton[][] GetReplyKeyboard(string[] stringArray)
         {
-            var keyboardReply = new KeyboardButton[1][];
+            KeyboardButton[][] keyboardReply = new KeyboardButton[1][];
             var keyboardButtons = new KeyboardButton[stringArray.Length+1];
             for (var i = 0; i < stringArray.Length; i++)
             {
@@ -117,12 +118,38 @@ namespace WeatherBot
             //Bot.OnInlineResultChosen += BotOnChosenInlineResultReceived;
             Bot.OnReceiveError += BotOnReceiveError;
 
+            Console.OutputEncoding = System.Text.Encoding.Unicode;
+
             Bot.StartReceiving(Array.Empty<UpdateType>());
             Console.WriteLine($"Start listening for @{me.Username}");
+
+            TestPrint();
 
             Console.ReadLine();
             Bot.StopReceiving();
         }
+
+        private static void TestPrint()
+        {
+            //try
+            //{
+                using (FileStream fs = new FileStream(@"TEST_JSON.file", FileMode.Open))
+                {
+                    string resultString = "EMPTY_STRING";
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        resultString = sr.ReadToEnd();
+                    }
+                    JSON_API_Decryptor.Load_JSON_String(resultString);
+                }
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine(e.Message);
+            //}
+
+        }
+   
 
         public static ReplyKeyboardMarkup GetKeyboard(int key)
         {
