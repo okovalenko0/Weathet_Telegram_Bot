@@ -33,7 +33,8 @@ namespace WeahetBot
         public const string DAYS_X_HOURS_X_WS = "days/[x]/sw/[x]/ws";
         
         public const string TN = "tn";
-        
+
+        public const string ERROR_NO_SUB_FIELD = "ERROR_NO_SUB_FIELD";
 
         public static void Load_JSON_String(string jsonFile)
         {
@@ -62,6 +63,12 @@ namespace WeahetBot
 
             string str = ExtractIndexedField(jsonFile, "days");
             str = ExtractIndexedSubField(str, 1);
+            //str = ExtractSubField(str, "tf");
+            str = ExtractIndexedField(str, "hours");
+            str = ExtractIndexedSubField(str, 0);
+            //str = ExtractSubField(str, "h");
+            //str = ExtractSubField(str, "descr");
+            //str = ConstructString_FromUnicode(str);
 
             Console.WriteLine(str);
             //Console.WriteLine("\n\n" + ExtractSubField(jsonFile, "tn"));
@@ -213,14 +220,14 @@ namespace WeahetBot
         public static string ExtractSubField(string sourceString, string subFieldName)
         {
             bool isString = false;
+            bool isNumber = false;
             int index = sourceString.IndexOf("\"" + subFieldName + "\"");
             if (index == -1)
             {
-                return "ERROR_NO_SUB_FIELD";
+                return ERROR_NO_SUB_FIELD;
             }
             string splittedStr = sourceString.Substring(index + subFieldName.Length + 3);
 
-            bool isNumber = false;
             for (int i = 0; i < splittedStr.Length; i++)
             {
                 if (splittedStr[i] != ' ')
@@ -241,18 +248,23 @@ namespace WeahetBot
             if (isNumber)
             {
                 splittedStr = splittedStr.Substring(0, splittedStr.IndexOf(','));
+                splittedStr = splittedStr.Trim(' ');
+                return splittedStr;
             }
             else
             {
-                splittedStr = splittedStr.Substring(splittedStr.IndexOf("\"") + 1);
-                splittedStr = splittedStr.Substring(0, splittedStr.IndexOf("\""));
+                //splittedStr = splittedStr.Substring(splittedStr.IndexOf("\"") + 1);
+                //int lastIndex = splittedStr.LastIndexOf('\"');
+                //splittedStr = splittedStr.Substring(0, lastIndex);
+                //splittedStr = splittedStr.Substring(0, splittedStr.IndexOf("\""));
             }
             //Console.WriteLine(splittedStr + "\n\n");
             //splittedStr = splittedStr.Split(':')[1];
-
+            //char lastChar = ' ';
             for (int i = 0; i < splittedStr.Length; i++)
             {
-                if (splittedStr[i] == '"')
+                char ch = splittedStr[i];
+                if (ch == '"')
                 {
                     isString = true;
                     break;
@@ -269,7 +281,30 @@ namespace WeahetBot
 
             if (isString)
             {
-                splittedStr = splittedStr.Split('"')[1];
+                bool firstFound = false;
+                char lastChar = ' ';
+                int splitStartIndex = 0;
+                int splitEndIndex = 0;
+                for (int i = 0; i < splittedStr.Length; i++)
+                {
+                    char ch = splittedStr[i];
+                    if (ch == '"' && lastChar != '\\')
+                    {
+                        if (firstFound)
+                        {
+                            splitEndIndex = i;
+                            break;
+                        }
+                        else
+                        {
+                            firstFound = true;
+                            splitStartIndex = i;
+                        }
+                    }
+                    lastChar = ch;
+                }
+                splittedStr = splittedStr.Substring(splitStartIndex, splitEndIndex);
+                //splittedStr = splittedStr.Split('"')[1];
             }
             else
             {
@@ -277,14 +312,16 @@ namespace WeahetBot
             }
 
             int startIndex = 0;
+            int lastIndex = splittedStr.LastIndexOf('\"');
             for (int i = 0; i < splittedStr.Length; i++)
             {
-                if (splittedStr[i] == ' ')
+                if (splittedStr[i] == ' ' || splittedStr[i] == '\"')
                     startIndex++;
                 else break;
             }
 
-            return splittedStr.Substring(startIndex);
+            
+            return splittedStr.Substring(startIndex, lastIndex - 1);
         }
 
         public static string ExtractIndexedField(string sourceString, string indexdFieldName)
@@ -353,15 +390,56 @@ namespace WeahetBot
             //return sourceString;
             //Console.WriteLine("\n\n" + sourceString + "\n\n\n");
 
-            string[] subStrings = sourceString.Split('}');
-            List<string> strings = new List<string>();
-            for (int i = 0; i < subStrings.Length; i++)
+            List<string> allFields = new List<string>();
+
+            openBraces = 0;
+            bool isReadingItem = false;
+            string buffer = "";
+            for (int i = 0; i < sourceString.Length; i++)
             {
-                string[] strs = subStrings[i].Split('{');
-                if (strs.Length > 1)
-                    strings.Add(subStrings[i].Split('{')[1]);
+                char ch = sourceString[i];
+                if (isReadingItem)
+                {
+                    if(ch == '{')
+                    {
+                        openBraces++;
+                    }
+                    else if (ch == '}')
+                    {
+                        openBraces--;
+                    }
+                    if (openBraces <= 0)
+                    {
+                        allFields.Add(buffer);
+                        buffer = "";
+                        isReadingItem = false;
+                        continue;
+                    }
+
+                    buffer += ch;
+                }
+                else
+                {
+                    if (ch == '{')
+                    {
+                        isReadingItem = true;
+                        openBraces++;
+                    }
+                }
             }
-            return "{" + strings[index] + "}";
+            //Console.WriteLine("All fields count: " + allFields.Count);
+
+            return allFields[index];
+
+            //string[] subStrings = sourceString.Split('}');
+            //List<string> strings = new List<string>();
+            //for (int i = 0; i < subStrings.Length; i++)
+            //{
+            //    string[] strs = subStrings[i].Split('{');
+            //    if (strs.Length > 1)
+            //        strings.Add(subStrings[i].Split('{')[1]);
+            //}
+            //return "{" + strings[index] + "}";
         }
 
         public static int GetIndexedSubFieldCount(string sourceString)
@@ -390,30 +468,60 @@ namespace WeahetBot
                     break;
                 }
             }
-            sourceString = sourceString.Substring(firstBrace, splitIndex - firstBrace);
 
-            string[] subStrings = sourceString.Split('}');
-            int count = 0;
-            //List<string> strings = new List<string>();
-            for (int i = 0; i < subStrings.Length; i++)
+            sourceString = sourceString.Substring(firstBrace, splitIndex - firstBrace);
+            
+            int fieldsCount = 0;
+
+            openBraces = 0;
+            bool isReadingItem = false;
+            string buffer = "";
+            for (int i = 0; i < sourceString.Length; i++)
             {
-                string[] strs = subStrings[i].Split('{');
-                if (strs.Length > 1)
-                    count++;
-                    //strings.Add(subStrings[i].Split('{')[1]);
+                char ch = sourceString[i];
+                if (isReadingItem)
+                {
+                    if (ch == '{')
+                    {
+                        openBraces++;
+                    }
+                    else if (ch == '}')
+                    {
+                        openBraces--;
+                    }
+                    if (openBraces <= 0)
+                    {
+                        fieldsCount++;
+                        buffer = "";
+                        isReadingItem = false;
+                        continue;
+                    }
+
+                    buffer += ch;
+                }
+                else
+                {
+                    if (ch == '{')
+                    {
+                        isReadingItem = true;
+                        openBraces++;
+                    }
+                }
             }
-            return count;
+
+            return fieldsCount;
         }
 
         public static string ConstructString_FromUnicode(string unicodeString)
         {
             string result = "ERROR";
 
-            unicodeString = unicodeString.Replace("\"", "");
-            unicodeString += '\\';
+            //unicodeString = unicodeString.Replace("\"", "");
+            //unicodeString += '\\';
 
             List<char> allChars = new List<char>();
             string charString = "";
+            //char lastChar = ' ';
             bool isReadingChar = false;
             for (int i = 0; i < unicodeString.Length; i++)
             {
@@ -479,13 +587,14 @@ namespace WeahetBot
                             isReadingChar = true;
                             charString += ch;
                         }
+                        else allChars.Add(ch);//(char)Convert.ToInt32(ch, 16);
                     }
                 }
-                    //charString += ch;
-                    //charString = charString.Replace("\\u", "0x");
-                    //char newChar = (char)Convert.ToInt32(charString, 16);
-                    //allChars.Add(newChar);
-                    //break;
+                //charString += ch;
+                //charString = charString.Replace("\\u", "0x");
+                //char newChar = (char)Convert.ToInt32(charString, 16);
+                //allChars.Add(newChar);
+                //break;
                 //}
 
                 //if (ch == '\\')
@@ -545,6 +654,7 @@ namespace WeahetBot
                 //{
                 //    charString += ch;
                 //}
+                //lastChar = ch;
             }
             result = new string(allChars.ToArray());
 
