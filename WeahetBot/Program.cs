@@ -20,6 +20,8 @@ namespace WeatherBot
         private static bool isWaitingCityName = false;
         private static TelegramBotClient Bot;
 
+        private static List<ReplyKeyboardMarkup> keyboards = new List<ReplyKeyboardMarkup>();
+
         public static int LocationID(float lat, float lon)
         {
             int ID = 0;
@@ -164,7 +166,6 @@ namespace WeatherBot
 
         public static ReplyKeyboardMarkup GetKeyboard(int key)
         {
-            List<ReplyKeyboardMarkup> keyboards = new List<ReplyKeyboardMarkup>(5);
             ReplyKeyboardMarkup mainmenu = new ReplyKeyboardMarkup(){Keyboard = new[]
             {
                 new[] { new KeyboardButton("Погода сейчас"), new KeyboardButton("Прогноз погоды")},
@@ -252,12 +253,15 @@ namespace WeatherBot
             else
                 return GetKeyboard(0);
         }
+        
+
 
         private static async void BotOnMessageReceived(object sender, MessageEventArgs e)
         {
             string curcase = "";
             Message msg = e.Message;
-            if (msg.From.Id == 699429390)
+            // HACK:
+            if (msg.From.Id == 699429390 || true)
             {
                 if (msg.Type == MessageType.Text)
                 {
@@ -268,15 +272,21 @@ namespace WeatherBot
                         {
                             ReplyKeyboardMarkup test = GetKeyboard(5);
                             string[] mass = JSON_API_Decryptor.GetAllItems(kaka);
-                            KeyboardButton[] buttons = new KeyboardButton[mass.Length];
-                            IEnumerable<KeyboardButton> lalala = buttons;
-                            IEnumerable<KeyboardButton> lala = lalala;
-                            for (int i = 0; i < mass.Length; i++)
+                            KeyboardButton[][] buttons = new KeyboardButton[mass.Length + 1][];
+
+                            for (int i = 0; i < buttons.GetLength(0); i++)
+                            {
+                                buttons[i] = new KeyboardButton[] { new KeyboardButton() };
+                            }
+                            for (int i = 0; i < mass.GetLength(0); i++)
                             {
                                 string str = JSON_API_Decryptor.ExtractSubField(mass[i], "title") + ", " + JSON_API_Decryptor.ExtractSubField(mass[i], "descr");
-                                buttons[i] = new KeyboardButton(str);
+                                buttons[i][0].Text = str;
                             }
-                            test.Keyboard = lala;
+                            buttons[mass.Length][0].Text = "Назад";
+                            test.Keyboard = buttons;
+                            await Bot.SendTextMessageAsync(msg.From.Id, "Выберите ваш город:", replyMarkup: GetKeyboard(5));
+
                         }
                         else
                             await Bot.SendTextMessageAsync(msg.From.Id, "Указанный город не найден!", replyMarkup: GetKeyboard(0));
