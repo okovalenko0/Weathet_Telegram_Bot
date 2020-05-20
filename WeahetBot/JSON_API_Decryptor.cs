@@ -124,6 +124,7 @@ namespace WeahetBot
                         }
                         else
                         {
+                            sourceString = ExtractField(sourceString, tokens[i]);
                             sourceString = ExtractSubField(sourceString, tokens[i]);
                         }
                     }
@@ -318,15 +319,17 @@ namespace WeahetBot
 
             int startIndex = 0;
             int lastIndex = splittedStr.LastIndexOf('\"');
+            splittedStr = splittedStr.TrimStart('\"');
+            //splittedStr += '\"';
+
             for (int i = 0; i < splittedStr.Length; i++)
             {
                 if (splittedStr[i] == ' ' || splittedStr[i] == '\"')
                     startIndex++;
                 else break;
             }
-
-            
-            return splittedStr.Substring(startIndex, lastIndex - 1) + " ";
+            Console.WriteLine(splittedStr);
+            return splittedStr.Substring(startIndex, lastIndex);
         }
 
         public static string ExtractIndexedField(string sourceString, string indexdFieldName)

@@ -113,32 +113,36 @@ namespace WeatherBot
             Bot.StartReceiving(Array.Empty<UpdateType>());
             Console.WriteLine($"Start listening for @{me.Username}");
 
-            //TestPrint();
+            TestPrint();
 
             Console.ReadLine();
             Bot.StopReceiving();
         }
 
-        //private static void TestPrint()
-        //{
-        //    //try
-        //    //{
-        //        using (FileStream fs = new FileStream(@"TEST_JSON.file", FileMode.Open))
-        //        {
-        //            string resultString = "EMPTY_STRING";
-        //            using (StreamReader sr = new StreamReader(fs))
-        //            {
-        //                resultString = sr.ReadToEnd();
-        //            }
-        //            JSON_API_Decryptor.Load_JSON_String(resultString);
-        //        }
-        //    //}
-        //    //catch (Exception e)
-        //    //{
-        //    //    Console.WriteLine(e.Message);
-        //    //}
-        //}
-   
+        private static void TestPrint()
+        {
+            int ID = 303023954;
+            // Create a request for the URL.
+            WebRequest request = WebRequest.Create("https://sinoptik.com.ru/api/weather.php?l=ru&id=" + ID);
+            // If required by the server, set the credentials.
+            request.Credentials = CredentialCache.DefaultCredentials;
+            // Get the response.
+            WebResponse response = request.GetResponse();
+            // Get the stream containing content returned by the server.
+            // The using block ensures the stream is automatically closed.
+            using (Stream dataStream = response.GetResponseStream())
+            {
+                // Open the stream using a StreamReader for easy access.
+                StreamReader reader = new StreamReader(dataStream);
+                // Read the content.
+                string responseFromServer = reader.ReadToEnd();
+                //Console.WriteLine(responseFromServer);
+                Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responseFromServer, "r/title"));
+            }
+            // Close the response.
+            response.Close();
+        }
+
 
         public static ReplyKeyboardMarkup GetKeyboard(int key)
         {
