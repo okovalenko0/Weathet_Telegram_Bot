@@ -34,6 +34,8 @@ namespace WeahetBot
         
         public const string TN = "tn";
 
+        public const string ERROR_FIELD_NOT_EXIST = "ERROR_FIELD_NOT_EXIST";
+
         public const string ERROR_NO_SUB_FIELD = "ERROR_NO_SUB_FIELD";
 
         public static void Load_JSON_String(string jsonFile)
@@ -90,7 +92,6 @@ namespace WeahetBot
             //Console.WriteLine(jsonFile);
         }
 
-
         public static string GetStringAtPath(string sourceString, string jsonPath)
         {
             string[] tokens = jsonPath.Split('/');
@@ -102,7 +103,7 @@ namespace WeahetBot
 
             for (int i = 0; i < tokens.Length; i++)
             {
-                if(isBegin)
+                if (isBegin)
                 {
                     if (isIndexedField)
                     {
@@ -167,10 +168,90 @@ namespace WeahetBot
             return sourceString;
         }
 
-        //private static bool IsNeedToExtractField(string sourceString)
-        //{
-        //
-        //}
+        public static string TryGetStringAtPath(string sourceString, string jsonPath)
+        {
+            try
+            {
+                string[] tokens = jsonPath.Split('/');
+
+                bool isBegin = false;
+                bool isIndexedField = false;
+                //int fieldIndex = 0;
+                string bufferToken = "";
+
+                for (int i = 0; i < tokens.Length; i++)
+                {
+                    if (isBegin)
+                    {
+                        if (isIndexedField)
+                        {
+                            isIndexedField = false;
+
+                            string indexStr = tokens[i].Split('[')[1];
+                            indexStr = indexStr.Split(']')[0];
+                            //Console.WriteLine(sourceString);
+                            sourceString = ExtractIndexedField(sourceString, bufferToken);
+                            sourceString = ExtractIndexedSubField(sourceString, Convert.ToInt32(indexStr));
+                            continue;
+                        }
+                        else
+                        {
+                            if (IsIndexedField(sourceString, tokens[i]))
+                            {
+                                bufferToken = tokens[i];
+                                isIndexedField = true;
+                            }
+                            else
+                            {
+                                //if (IsNeedToExtractField(sourceString))
+                                //    sourceString = ExtractField(sourceString, tokens[i]);
+                                sourceString = sourceString.Substring(sourceString.IndexOf(tokens[i]) - tokens[i].Length);
+                                sourceString = ExtractSubField(sourceString, tokens[i]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (IsIndexedField(sourceString, tokens[i]))
+                        {
+                            //sourceString = ExtractIndexedField(sourceString, tokens[i]);
+                            bufferToken = tokens[i];
+                            isIndexedField = true;
+                        }
+                        else
+                        {
+                            sourceString = ExtractField(sourceString, tokens[i]);
+                        }
+                    }
+
+                    if (isBegin == false)
+                    {
+                        isBegin = true;
+                    }
+                }
+
+                if (tokens.Length == 1)
+                {
+                    sourceString = ExtractSubField(sourceString, tokens[0]);
+                }
+
+                if (sourceString.Contains("\\u"))
+                {
+                    sourceString = ConstructString_FromUnicode(sourceString);
+                }
+                //foreach (var item in tokens)
+                //{
+                //    Console.WriteLine(item);
+                //}
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return ERROR_FIELD_NOT_EXIST;
+            }
+            return sourceString;
+        }
+
 
         public static bool IsIndexedField(string sourceString, string fieldName)
         {
