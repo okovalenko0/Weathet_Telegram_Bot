@@ -119,7 +119,7 @@ namespace WeatherBot
             Bot.StopReceiving();
         }
 
-        private static string TestPrint()
+        private static void TestPrint()
         {
             int ID = 303023954;
             string responsemy;
@@ -143,8 +143,7 @@ namespace WeatherBot
             // Close the response.
             response.Close();
 
-            responsemy = JSON_API_Decryptor.GetStringAtPath(responsemy, "r/title");
-            return responsemy;
+            Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responsemy, "days/[0]/hours/[0]/h"));
         }
 
 
@@ -272,7 +271,7 @@ namespace WeatherBot
                             await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
                             break;
                         case "Проверка юникода":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, TestPrint());
+                            //await Bot.SendTextMessageAsync(msg.Chat.Id, );
                             break;
 
                     }
