@@ -19,16 +19,6 @@ namespace WeatherBot
     {
         private static TelegramBotClient Bot;
 
-        public static bool isAdmin(int ID)
-        {
-            bool state;
-            if (ID == 699429390)
-                state = true;
-            else
-                state = false;
-            return state;
-        }
-
         public static int CInt(string s)
         {
             return Convert.ToInt32(s);
@@ -76,7 +66,7 @@ namespace WeatherBot
         private static KeyboardButton[][] GetReplyKeyboard(string[] stringArray)
         {
             KeyboardButton[][] keyboardReply = new KeyboardButton[1][];
-            var keyboardButtons = new KeyboardButton[stringArray.Length+1];
+            KeyboardButton[] keyboardButtons = new KeyboardButton[stringArray.Length+1];
             for (var i = 0; i < stringArray.Length; i++)
             {
                 keyboardButtons[i] = new KeyboardButton
@@ -108,7 +98,7 @@ namespace WeatherBot
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             Bot = new TelegramBotClient("1251334082:AAHqEJrTsFFczl8snVaanvOMXHa7k3TJW28");
-            var me = Bot.GetMeAsync().Result;
+            User me = Bot.GetMeAsync().Result;
             Console.Title = me.Username;
             
             Bot.OnMessage += BotOnMessageReceived;
@@ -123,43 +113,42 @@ namespace WeatherBot
             Bot.StartReceiving(Array.Empty<UpdateType>());
             Console.WriteLine($"Start listening for @{me.Username}");
 
-            TestPrint();
+            //TestPrint();
 
             Console.ReadLine();
             Bot.StopReceiving();
         }
 
-        private static void TestPrint()
-        {
-            //try
-            //{
-                using (FileStream fs = new FileStream(@"TEST_JSON.file", FileMode.Open))
-                {
-                    string resultString = "EMPTY_STRING";
-                    using (StreamReader sr = new StreamReader(fs))
-                    {
-                        resultString = sr.ReadToEnd();
-                    }
-                    JSON_API_Decryptor.Load_JSON_String(resultString);
-                }
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e.Message);
-            //}
-
-        }
+        //private static void TestPrint()
+        //{
+        //    //try
+        //    //{
+        //        using (FileStream fs = new FileStream(@"TEST_JSON.file", FileMode.Open))
+        //        {
+        //            string resultString = "EMPTY_STRING";
+        //            using (StreamReader sr = new StreamReader(fs))
+        //            {
+        //                resultString = sr.ReadToEnd();
+        //            }
+        //            JSON_API_Decryptor.Load_JSON_String(resultString);
+        //        }
+        //    //}
+        //    //catch (Exception e)
+        //    //{
+        //    //    Console.WriteLine(e.Message);
+        //    //}
+        //}
    
 
         public static ReplyKeyboardMarkup GetKeyboard(int key)
         {
             List<ReplyKeyboardMarkup> keyboards = new List<ReplyKeyboardMarkup>(5);
-            var mainmenu = new ReplyKeyboardMarkup(){Keyboard = new[]
+            ReplyKeyboardMarkup mainmenu = new ReplyKeyboardMarkup(){Keyboard = new[]
             {
-                new[] { new KeyboardButton("Погода сейчас"), new KeyboardButton("Прогноз погоды"), new KeyboardButton("Радар") },
+                new[] { new KeyboardButton("Погода сейчас"), new KeyboardButton("Прогноз погоды")},
                 new[] { new KeyboardButton("Поддержка"), new KeyboardButton("Настройки") }
             }};
-            var settings = new ReplyKeyboardMarkup()
+            ReplyKeyboardMarkup settings = new ReplyKeyboardMarkup()
             {
                 Keyboard = new[]
                 {
@@ -167,7 +156,7 @@ namespace WeatherBot
                     new[] { new KeyboardButton("Назад") }
                 }
             };
-            var help = new ReplyKeyboardMarkup()
+            ReplyKeyboardMarkup help = new ReplyKeyboardMarkup()
             {
                 Keyboard = new[]
                 {
@@ -175,7 +164,7 @@ namespace WeatherBot
                     new[] { new KeyboardButton("Назад") }
                 }
             };
-            var location = new ReplyKeyboardMarkup()
+            ReplyKeyboardMarkup location = new ReplyKeyboardMarkup()
             {
                 Keyboard = new[]
                 {
@@ -183,7 +172,7 @@ namespace WeatherBot
                     new[] { new KeyboardButton("Назад") }
                 }
             };
-            var locationsend = new ReplyKeyboardMarkup(new[]
+            ReplyKeyboardMarkup locationsend = new ReplyKeyboardMarkup(new[]
             {
                  KeyboardButton.WithRequestLocation("Отправить своё местоположение"),
                  new KeyboardButton("Назад")
@@ -217,10 +206,8 @@ namespace WeatherBot
         private static async void BotOnMessageReceived(object sender, MessageEventArgs e)
         {
             string curcase = "";
-            var msg = e.Message;
-            var buttonItem = new[] { "one", "two", "three", "Four" };
-            var keyboardMarkup = new ReplyKeyboardMarkup(GetReplyKeyboard(buttonItem));
-            if (isAdmin(msg.From.Id))
+            Message msg = e.Message;
+            if (msg.From.Id == 699429390)
             {
                 if (msg.Type == MessageType.Text)
                 {
@@ -274,7 +261,7 @@ namespace WeatherBot
                             break;
                         case "Обратная связь":
                             curcase = "Msgtome";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам её создателю.");
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
                             break;
                     }
                 }
@@ -291,7 +278,9 @@ namespace WeatherBot
         }
         private static void BotOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
         {
-            Console.WriteLine("Received error: {0} — {1}",
+            Console.WriteLine
+            (
+                "Received error: {0} — {1}",
                 receiveErrorEventArgs.ApiRequestException.ErrorCode,
                 receiveErrorEventArgs.ApiRequestException.Message
             );
