@@ -70,7 +70,7 @@ namespace WeahetBot
             //str = ExtractSubField(str, "descr");
             //str = ConstructString_FromUnicode(str);
 
-            string str = GetStringAtPath(jsonFile, "days/[0]/hours/[4]/h");
+            string str = GetStringAtPath(jsonFile, "days/[0]/hours/[0]/h");
 
             Console.WriteLine(str);
             //Console.WriteLine("\n\n" + ExtractSubField(jsonFile, "tn"));
@@ -124,7 +124,9 @@ namespace WeahetBot
                         }
                         else
                         {
-                            sourceString = ExtractField(sourceString, tokens[i]);
+                            //if (IsNeedToExtractField(sourceString))
+                            //    sourceString = ExtractField(sourceString, tokens[i]);
+                            sourceString = sourceString.Substring(sourceString.IndexOf(tokens[i]) - tokens[i].Length);
                             sourceString = ExtractSubField(sourceString, tokens[i]);
                         }
                     }
@@ -164,6 +166,11 @@ namespace WeahetBot
             //}
             return sourceString;
         }
+
+        //private static bool IsNeedToExtractField(string sourceString)
+        //{
+        //
+        //}
 
         public static bool IsIndexedField(string sourceString, string fieldName)
         {
@@ -317,19 +324,21 @@ namespace WeahetBot
                 splittedStr = splittedStr.Split(',')[0];
             }
 
-            int startIndex = 0;
-            int lastIndex = splittedStr.LastIndexOf('\"');
+            //int startIndex = 0;
+            //int lastIndex = splittedStr.LastIndexOf('\"');
+            //splittedStr = splittedStr.TrimStart('\"');
+            ////splittedStr += '\"';
+            //
+            //for (int i = 0; i < splittedStr.Length; i++)
+            //{
+            //    if (splittedStr[i] == ' ' || splittedStr[i] == '\"')
+            //        startIndex++;
+            //    else break;
+            //}
+            //Console.WriteLine(splittedStr);
             splittedStr = splittedStr.TrimStart('\"');
-            //splittedStr += '\"';
-
-            for (int i = 0; i < splittedStr.Length; i++)
-            {
-                if (splittedStr[i] == ' ' || splittedStr[i] == '\"')
-                    startIndex++;
-                else break;
-            }
-            Console.WriteLine(splittedStr);
-            return splittedStr.Substring(startIndex, lastIndex);
+            return splittedStr + " ";
+            //return splittedStr.Substring(startIndex, lastIndex);
         }
 
         public static string ExtractIndexedField(string sourceString, string indexdFieldName)
