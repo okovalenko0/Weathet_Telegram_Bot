@@ -122,6 +122,7 @@ namespace WeatherBot
         private static void TestPrint()
         {
             int ID = 303023954;
+            string responsemy;
             // Create a request for the URL.
             WebRequest request = WebRequest.Create("https://sinoptik.com.ru/api/weather.php?l=ru&id=" + ID);
             // If required by the server, set the credentials.
@@ -136,11 +137,13 @@ namespace WeatherBot
                 StreamReader reader = new StreamReader(dataStream);
                 // Read the content.
                 string responseFromServer = reader.ReadToEnd();
+                responsemy = responseFromServer;
                 //Console.WriteLine(responseFromServer);
-                Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responseFromServer, "r/title"));
             }
             // Close the response.
             response.Close();
+
+            Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responsemy, "days/[0]/hours/[0]/h"));
         }
 
 
@@ -267,6 +270,10 @@ namespace WeatherBot
                             curcase = "Msgtome";
                             await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
                             break;
+                        case "Проверка юникода":
+                            //await Bot.SendTextMessageAsync(msg.Chat.Id, );
+                            break;
+
                     }
                 }
                 else if (msg.Type == MessageType.Location)
