@@ -252,6 +252,76 @@ namespace WeahetBot
             return sourceString;
         }
 
+        public static string[] GetAllItems(string sourceString)
+        {
+            int firstBrace = 0;
+            int splitIndex = 0;
+            int openBraces = 0;
+            bool closedBraceFound = false;
+            for (int i = 0; i < sourceString.Length; i++)
+            {
+                if (sourceString[i] == '[')
+                {
+                    openBraces++;
+                    if (firstBrace == 0)
+                        firstBrace = i + 1;
+                }
+                if (sourceString[i] == ']')
+                {
+                    closedBraceFound = true;
+                    openBraces--;
+                }
+
+                if (openBraces == 0 && closedBraceFound)
+                {
+                    splitIndex = i;
+                    break;
+                }
+            }
+
+            sourceString = sourceString.Substring(firstBrace, splitIndex - firstBrace);
+
+            List<string> allFields = new List<string>();
+
+            openBraces = 0;
+            bool isReadingItem = false;
+            string buffer = "";
+            for (int i = 0; i < sourceString.Length; i++)
+            {
+                char ch = sourceString[i];
+                if (isReadingItem)
+                {
+                    if (ch == '{')
+                    {
+                        openBraces++;
+                    }
+                    else if (ch == '}')
+                    {
+                        openBraces--;
+                    }
+                    if (openBraces <= 0)
+                    {
+                        allFields.Add(buffer);
+                        buffer = "";
+                        isReadingItem = false;
+                        continue;
+                    }
+
+                    buffer += ch;
+                }
+                else
+                {
+                    if (ch == '{')
+                    {
+                        isReadingItem = true;
+                        openBraces++;
+                    }
+                }
+            }
+
+            return allFields.ToArray();
+        }
+
 
         public static bool IsIndexedField(string sourceString, string fieldName)
         {
