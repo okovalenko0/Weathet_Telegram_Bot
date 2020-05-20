@@ -10,7 +10,7 @@
 		min:
 		max:
 Поля из days:
-	0-7:
+	0-6:
 		sr:
 		ss:
 		tf:

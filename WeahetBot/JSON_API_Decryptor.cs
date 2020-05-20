@@ -24,13 +24,13 @@ namespace WeahetBot
         public const string DAYS_X_SW_X_TXT = "days/[x]/sw/[0]/txt";
         public const string DAYS_X_SW_X_DESCR = "days/[x]/sw/[0]/descr";
 
-        public const string DAYS_X_HOURS_X_H = "days/[x]/sw/[x]/h";
-        public const string DAYS_X_HOURS_X_T = "days/[x]/sw/[x]/t";
-        public const string DAYS_X_HOURS_X_TF = "days/[x]/sw/[x]/tf";
-        public const string DAYS_X_HOURS_X_P = "days/[x]/sw/[x]/p";
-        public const string DAYS_X_HOURS_X_W = "days/[x]/sw/[x]/w";
-        public const string DAYS_X_HOURS_X_WD = "days/[x]/sw/[x]/wd";
-        public const string DAYS_X_HOURS_X_WS = "days/[x]/sw/[x]/ws";
+        public const string DAYS_X_HOURS_X_H = "days/[x]/hours/[x]/h";
+        public const string DAYS_X_HOURS_X_T = "days/[x]/hours/[x]/t";
+        public const string DAYS_X_HOURS_X_TF = "days/[x]/hours/[x]/tf";
+        public const string DAYS_X_HOURS_X_P = "days/[x]/hours/[x]/p";
+        public const string DAYS_X_HOURS_X_W = "days/[x]/hours/[x]/w";
+        public const string DAYS_X_HOURS_X_WD = "days/[x]/hours/[x]/wd";
+        public const string DAYS_X_HOURS_X_WS = "days/[x]/hours/[x]/ws";
         
         public const string TN = "tn";
 
@@ -61,14 +61,16 @@ namespace WeahetBot
 
             //string str = GetStringAtPath(jsonFile, "days/[2]/ss");
 
-            string str = ExtractIndexedField(jsonFile, "days");
-            str = ExtractIndexedSubField(str, 1);
-            //str = ExtractSubField(str, "tf");
-            str = ExtractIndexedField(str, "hours");
-            str = ExtractIndexedSubField(str, 0);
+            //string str = ExtractIndexedField(jsonFile, "days");
+            //str = ExtractIndexedSubField(str, 1);
+            ////str = ExtractSubField(str, "tf");
+            //str = ExtractIndexedField(str, "hours");
+            //str = ExtractIndexedSubField(str, 0);
             //str = ExtractSubField(str, "h");
             //str = ExtractSubField(str, "descr");
             //str = ConstructString_FromUnicode(str);
+
+            string str = GetStringAtPath(jsonFile, "days/[0]/hours/[4]/h");
 
             Console.WriteLine(str);
             //Console.WriteLine("\n\n" + ExtractSubField(jsonFile, "tn"));
@@ -96,7 +98,7 @@ namespace WeahetBot
             bool isBegin = false;
             bool isIndexedField = false;
             //int fieldIndex = 0;
-            
+            string bufferToken = "";
 
             for (int i = 0; i < tokens.Length; i++)
             {
@@ -109,6 +111,7 @@ namespace WeahetBot
                         string indexStr = tokens[i].Split('[')[1];
                         indexStr = indexStr.Split(']')[0];
                         //Console.WriteLine(sourceString);
+                        sourceString = ExtractIndexedField(sourceString, bufferToken);
                         sourceString = ExtractIndexedSubField(sourceString, Convert.ToInt32(indexStr));
                         continue;
                     }
@@ -116,6 +119,7 @@ namespace WeahetBot
                     {
                         if (IsIndexedField(sourceString, tokens[i]))
                         {
+                            bufferToken = tokens[i];
                             isIndexedField = true;
                         }
                         else
@@ -128,7 +132,8 @@ namespace WeahetBot
                 {
                     if (IsIndexedField(sourceString, tokens[i]))
                     {
-                        sourceString = ExtractIndexedField(sourceString, tokens[i]);
+                        //sourceString = ExtractIndexedField(sourceString, tokens[i]);
+                        bufferToken = tokens[i];
                         isIndexedField = true;
                     }
                     else
@@ -321,7 +326,7 @@ namespace WeahetBot
             }
 
             
-            return splittedStr.Substring(startIndex, lastIndex - 1);
+            return splittedStr.Substring(startIndex, lastIndex - 1) + " ";
         }
 
         public static string ExtractIndexedField(string sourceString, string indexdFieldName)

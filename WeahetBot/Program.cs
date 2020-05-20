@@ -22,7 +22,8 @@ namespace WeatherBot
         public static bool isAdmin(int ID)
         {
             bool state;
-            if (ID == 699429390)
+            //Console.WriteLine(ID);
+            if (ID == 699429390 || ID == 467423758)
                 state = true;
             else
                 state = false;
@@ -103,6 +104,7 @@ namespace WeatherBot
                 replyMarkup: GetKeyboard(4)
             );
         }
+        
 
         public static void Main()
         {
