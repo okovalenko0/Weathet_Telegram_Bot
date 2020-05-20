@@ -17,17 +17,8 @@ namespace WeatherBot
 {
     public static class Program
     {
+        private static bool isWaitingCityName = false;
         private static TelegramBotClient Bot;
-
-        public static int CInt(string s)
-        {
-            return Convert.ToInt32(s);
-        }
-
-        public static string CString(int s)
-        {
-            return Convert.ToString(s);
-        }
 
         public static int LocationID(float lat, float lon)
         {
@@ -54,7 +45,7 @@ namespace WeatherBot
                 {
                     if (s.IndexOf("id") != -1)
                     {
-                        ID =  CInt(s.Remove(0, 5));
+                        ID =  Convert.ToInt32(s.Remove(0, 5));
                     }
                 }
             }
@@ -85,13 +76,24 @@ namespace WeatherBot
             return keyboardReply;
         }
 
-        static async Task RequestLocation(Message message)
+        static async Task<string> MyWebRequest(string msg)
         {
-            await Bot.SendTextMessageAsync(
-                chatId: message.Chat.Id,
-                text: "Здесь можно добавить точку",
-                replyMarkup: GetKeyboard(4)
-            );
+            return await Task.Run(() => Metod(msg));
+        }
+
+        public static string Metod(string msg)
+        {
+            string responseFromServer = "ERROR NIKITA AHTUNG";
+            WebRequest request = WebRequest.Create(msg);
+            request.Credentials = CredentialCache.DefaultCredentials;
+            WebResponse response = request.GetResponse();
+            using (Stream dataStream = response.GetResponseStream())
+            {
+                StreamReader reader = new StreamReader(dataStream);
+                responseFromServer = reader.ReadToEnd();
+            }
+            response.Close();
+            return responseFromServer;
         }
 
         public static void Main()
@@ -143,9 +145,22 @@ namespace WeatherBot
             // Close the response.
             response.Close();
 
-            Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responsemy, "days/[0]/hours/[0]/h"));
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            //Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responsemy, "days/[0]/hours/[0]/h"));
+            //string sourceString = "";
+            //using (FileStream fs = new FileStream("TEST_JSON_CITIES.file", FileMode.Open))
+            //{
+            //    using (StreamReader sr = new StreamReader(fs))
+            //    {
+            //        sourceString = sr.ReadToEnd();
+            //    }
+            //}
+            //foreach (string item in JSON_API_Decryptor.GetAllItems(sourceString))
+            //{
+            //    Console.WriteLine("----------------------------");
+            //    Console.WriteLine(item);
+            //}
         }
-
 
         public static ReplyKeyboardMarkup GetKeyboard(int key)
         {
@@ -184,17 +199,45 @@ namespace WeatherBot
                  KeyboardButton.WithRequestLocation("Отправить своё местоположение"),
                  new KeyboardButton("Назад")
             });
+
+            ReplyKeyboardMarkup availableCities = new ReplyKeyboardMarkup();
+
             keyboards.Add(mainmenu);
             keyboards.Add(settings);
             keyboards.Add(help);
             keyboards.Add(location);
             keyboards.Add(locationsend);
+            keyboards.Add(availableCities);
             foreach (ReplyKeyboardMarkup s in keyboards)
             {
                 s.ResizeKeyboard = true;
             }
             return keyboards.ElementAt(key);
         }
+
+        private static KeyboardButton[][] kekke(string[] stringArray)
+        {
+            KeyboardButton[][] keyboardReply = new KeyboardButton[1][];
+            KeyboardButton[] keyboardButtons = new KeyboardButton[stringArray.Length + 1];
+            for (var i = 0; i < stringArray.Length; i++)
+            {
+                keyboardButtons[i] = new KeyboardButton
+                {
+                    Text = stringArray[i]
+                };
+                if (i == stringArray.Length - 1)
+                {
+                    keyboardButtons[i + 1] = new KeyboardButton
+                    {
+                        Text = "Назад"
+                    };
+                };
+            }
+            keyboardReply[0] = keyboardButtons;
+            return keyboardReply;
+        }
+
+
 
         public static ReplyKeyboardMarkup Back(string curcase)
         {
@@ -218,62 +261,84 @@ namespace WeatherBot
             {
                 if (msg.Type == MessageType.Text)
                 {
-                    switch (msg.Text)
+                    if (isWaitingCityName)
                     {
-                        case "/start":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Погода сейчас":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Тут будет погода");
-                            break;
-                        case "Прогноз погоды":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Тут будет погода");
-                            break;
-                        case "Радар":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Тут мб будет радар", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Поддержка":
-                            curcase = "Help";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Здесь вы сможете связаться с разработчиком:", replyMarkup: GetKeyboard(2));
-                            break;
-                        case "Настройки":
-                            curcase = "Settings";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetKeyboard(1));
-                            break;
-                        case "Отправить своё местоположение":
-                            await RequestLocation(msg);
-                            break;
-                        case "Назад":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Возвращаемся назад", replyMarkup: Back(curcase));
-                            break;
-                        case "Уведомления":
-                            curcase = "Notifications";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Язык":
-                            curcase = "Language";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Локации":
-                            curcase = "Locs";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Удалить":
-                            curcase = "Delloc";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
-                            break;
-                        case "Добавить":
-                            curcase = "Addloc";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Test");
-                            break;
-                        case "Обратная связь":
-                            curcase = "Msgtome";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
-                            break;
-                        case "Проверка юникода":
-                            //await Bot.SendTextMessageAsync(msg.Chat.Id, );
-                            break;
-
+                        string kaka = await MyWebRequest("http://sinoptik.com.ru/api/suggest.php?l=ru&q=" + msg.Text);
+                        if (kaka != "[]")
+                        {
+                            ReplyKeyboardMarkup test = GetKeyboard(5);
+                            string[] mass = JSON_API_Decryptor.GetAllItems(kaka);
+                            KeyboardButton[] buttons = new KeyboardButton[mass.Length];
+                            IEnumerable<KeyboardButton> lalala = buttons;
+                            IEnumerable<KeyboardButton> lala = lalala;
+                            for (int i = 0; i < mass.Length; i++)
+                            {
+                                string str = JSON_API_Decryptor.ExtractSubField(mass[i], "title") + ", " + JSON_API_Decryptor.ExtractSubField(mass[i], "descr");
+                                buttons[i] = new KeyboardButton(str);
+                            }
+                            test.Keyboard = lala;
+                        }
+                        else
+                            await Bot.SendTextMessageAsync(msg.From.Id, "Указанный город не найден!", replyMarkup: GetKeyboard(0));
+                        isWaitingCityName = false;
+                    }
+                    else
+                    {
+                        switch (msg.Text)
+                        {
+                            case "/start":
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Погода сейчас":
+                                isWaitingCityName = true;
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetKeyboard(4));
+                                break;
+                            case "Прогноз погоды":
+                                isWaitingCityName = true;
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetKeyboard(4));
+                                break;
+                            case "Радар":
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Тут мб будет радар", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Поддержка":
+                                curcase = "Help";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Здесь вы сможете связаться с разработчиком:", replyMarkup: GetKeyboard(2));
+                                break;
+                            case "Настройки":
+                                curcase = "Settings";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetKeyboard(1));
+                                break;
+                            case "Назад":
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Возвращаемся назад", replyMarkup: Back(curcase));
+                                break;
+                            case "Уведомления":
+                                curcase = "Notifications";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Язык":
+                                curcase = "Language";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Локации":
+                                curcase = "Locs";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Удалить":
+                                curcase = "Delloc";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Главное меню:", replyMarkup: GetKeyboard(0));
+                                break;
+                            case "Добавить":
+                                curcase = "Addloc";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Test");
+                                break;
+                            case "Обратная связь":
+                                curcase = "Msgtome";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
+                                break;
+                            case "Nikita":
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "1", replyMarkup: GetKeyboard(5));
+                                break;
+                        }
                     }
                 }
                 else if (msg.Type == MessageType.Location)
