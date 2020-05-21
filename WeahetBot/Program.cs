@@ -20,6 +20,8 @@ namespace WeatherBot
         private static bool isWaitingCityName = false;
         private static bool isWaitingServiceMessage = false;
         private static List<ReplyKeyboardMarkup> keyboards = new List<ReplyKeyboardMarkup>();
+        private static List<InlineKeyboardMarkup> callbackkeys = new List<InlineKeyboardMarkup>();
+
         private static TelegramBotClient Bot;
 
         private static void Main()
@@ -31,7 +33,7 @@ namespace WeatherBot
 
             Bot.OnMessage += BotOnMessageReceived;
             Bot.OnMessageEdited += BotOnMessageReceived;
-            //Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
+            Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
             //Bot.OnInlineQuery += BotOnInlineQueryReceived;
             //Bot.OnInlineResultChosen += BotOnChosenInlineResultReceived;
             Bot.OnReceiveError += BotOnReceiveError;
@@ -67,32 +69,32 @@ namespace WeatherBot
                         "\nФамилия: " + msg.From.LastName +
                         "\nUsername: " + msg.From.Username +
                         "\nСодержание: " + msg.Text);
-                    await Bot.SendTextMessageAsync(msg.From.Id, "Ваше сообщение было отправлено разработчику. \nСпасибо за отзыв!", replyMarkup: GetKeyboard(0));
+                    await Bot.SendTextMessageAsync(msg.From.Id, "Ваше сообщение было отправлено разработчику. \nСпасибо за отзыв!", replyMarkup: GetReplyKeyboard(0));
                 }
                 else
                 {
                     switch (msg.Text)
                     {
                         case "/start":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetKeyboard(0));
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetReplyKeyboard(0));
                             break;
                         case "/feedback":
                             goto case "Обратная связь";
                         case "Погода":
                             isWaitingCityName = true;
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetKeyboard(3));
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
                             break;
                         case "Прогноз":
                             isWaitingCityName = true;
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetKeyboard(3));
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
                             break;
                         case "Поддержка":
                             curcase = "Help";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Поддержка:", replyMarkup: GetKeyboard(2));
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Поддержка:", replyMarkup: GetReplyKeyboard(2));
                             break;
                         case "Настройки":
                             curcase = "Settings";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetKeyboard(1));
+                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetReplyKeyboard(1));
                             break;
                         case "Обратная связь":
                             isWaitingServiceMessage = true;
@@ -112,10 +114,21 @@ namespace WeatherBot
             }
             else if (msg.Type == MessageType.Location)
             {
-                await CityLocationID(await MyWebRequest("https://sinoptik.com.ru/api/location.php?s=false&lat=" + msg.Location.Latitude + "&lon=" + msg.Location.Longitude), msg);
+                string apiRequest = await MyWebRequest("https://sinoptik.com.ru/api/location.php?s=false&lat=" + msg.Location.Latitude + "&lon=" + msg.Location.Longitude);
+                string ID = JSON_API_Decryptor.ExtractSubField(apiRequest, "id");
+                await GetWeather(ID, msg);
             }
             else
-                await Bot.SendTextMessageAsync(msg.Chat.Id, "С этим я ещё работать не умею.", replyMarkup: GetKeyboard(0));
+                await Bot.SendTextMessageAsync(msg.Chat.Id, "С этим я ещё работать не умею.", replyMarkup: GetReplyKeyboard(0));
+        }
+
+        private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs e)
+        {
+            CallbackQuery msg = e.CallbackQuery;
+            if (e.CallbackQuery.Data == "WeatherFull")
+                await Bot.EditMessageTextAsync(msg.From.Id, msg.Message.MessageId, "   ", replyMarkup: GetCallbackKeyboard(1));
+            else
+                await Bot.EditMessageTextAsync(msg.From.Id, msg.Message.MessageId, "Вернёмся в начало.", replyMarkup: GetCallbackKeyboard(0));
         }
 
         private static async Task<string> MyWebRequest(string msg)
@@ -142,7 +155,7 @@ namespace WeatherBot
         {
             if (apiRequest != "[]")
             {
-                ReplyKeyboardMarkup test = GetKeyboard(4);
+                ReplyKeyboardMarkup test = GetReplyKeyboard(4);
                 string[] mass = JSON_API_Decryptor.GetAllItems(apiRequest);
                 KeyboardButton[][] buttons = new KeyboardButton[mass.Length + 1][];
                 for (int i = 0; i < buttons.GetLength(0); i++)
@@ -156,16 +169,16 @@ namespace WeatherBot
                 }
                 buttons[mass.Length][0].Text = "Назад";
                 test.Keyboard = buttons;
-                await Bot.SendTextMessageAsync(msg.From.Id, "Выберите ваш город:", replyMarkup: GetKeyboard(4));
+                await Bot.SendTextMessageAsync(msg.From.Id, "Выберите ваш город:", replyMarkup: GetReplyKeyboard(4));
             }
             else
-                await Bot.SendTextMessageAsync(msg.From.Id, "Указанный город не найден!", replyMarkup: GetKeyboard(0));
+                await Bot.SendTextMessageAsync(msg.From.Id, "Указанный город не найден!", replyMarkup: GetReplyKeyboard(0));
         }
-        private static async Task CityLocationID(string apiRequest, Message msg)
+
+        private static async Task GetWeather(string ID, Message msg)
         {
-            string ID = JSON_API_Decryptor.ExtractSubField(apiRequest, "id");
             string weatherRequest = await MyWebRequest("https://sinoptik.com.ru/api/weather.php?l=ru&id=" + ID);
-            if (apiRequest != "[]")
+            if (weatherRequest != "[]")
             {
                 DateTime Now = DateTime.Now;
                 Now = Now.Date;
@@ -190,10 +203,10 @@ namespace WeatherBot
                     "\nВетер: " + wd + " " + ws +
                     "\nВероятность осадков: " + pp + "%" +
                     "\n\nПрогноз от синоптиков: \n" + textf
-                    );
+                    , replyMarkup: GetCallbackKeyboard(0));
             }
             else
-                await Bot.SendTextMessageAsync(msg.From.Id, "Сервер sinoptik.com.ru в данный момент не доступен.", replyMarkup: GetKeyboard(0));
+                await Bot.SendTextMessageAsync(msg.From.Id, "Сервер sinoptik.com.ru в данный момент не доступен.", replyMarkup: GetReplyKeyboard(0));
         }
 
         //private static async Task WeatherToday(string apiRequest, Message msg)
@@ -218,7 +231,7 @@ namespace WeatherBot
         //    //}
         //}
 
-        private static ReplyKeyboardMarkup GetKeyboard(int key)
+        private static ReplyKeyboardMarkup GetReplyKeyboard(int key)
         {
             ReplyKeyboardMarkup mainmenu = new ReplyKeyboardMarkup(){Keyboard = new[]
             {
@@ -246,7 +259,6 @@ namespace WeatherBot
                  KeyboardButton.WithRequestLocation("Отправить своё местоположение"),
                  new KeyboardButton("Назад")
             });
-
             ReplyKeyboardMarkup availableCities = new ReplyKeyboardMarkup();
 
             keyboards.Add(mainmenu);
@@ -261,16 +273,39 @@ namespace WeatherBot
             return keyboards.ElementAt(key);
         }
 
+        private static InlineKeyboardMarkup GetCallbackKeyboard(int key)
+        {
+
+            InlineKeyboardMarkup weatherFull = new InlineKeyboardMarkup
+            (
+                new[]
+                {
+                    new [] {new InlineKeyboardButton{Text = "Подробнее...", CallbackData = "WeatherFull"},}
+                }
+            );
+
+            InlineKeyboardMarkup weatherShort = new InlineKeyboardMarkup
+            (
+                new[]
+                {
+                     new [] {new InlineKeyboardButton{Text = "Кратко...", CallbackData = "WeatherShort"},}
+                }
+            );
+            callbackkeys.Add(weatherFull);
+            callbackkeys.Add(weatherShort);
+            return callbackkeys.ElementAt(key);
+        }
+
         private static ReplyKeyboardMarkup Back(string curcase)
         {
             if ((curcase == "Help") || (curcase == "Settings") || (curcase == ""))
-                return GetKeyboard(0);
+                return GetReplyKeyboard(0);
             else if ((curcase == "Notifications") || (curcase == "Locs") || (curcase == "Language"))
-                return GetKeyboard(1);
+                return GetReplyKeyboard(1);
             else if (curcase == "Msgtome")
-                return GetKeyboard(2);
+                return GetReplyKeyboard(2);
             else
-                return GetKeyboard(0);
+                return GetReplyKeyboard(0);
         }
 
         private static async Task Info(Message msg)
@@ -283,7 +318,7 @@ namespace WeatherBot
                     infoString = sr.ReadToEnd();
                 }
             }
-            await Bot.SendTextMessageAsync(msg.From.Id, infoString, replyMarkup: GetKeyboard(2));
+            await Bot.SendTextMessageAsync(msg.From.Id, infoString, replyMarkup: GetReplyKeyboard(2));
         }
 
         private static async void BotOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
