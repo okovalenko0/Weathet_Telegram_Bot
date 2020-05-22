@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace WeahetBot
 {
@@ -15,6 +14,7 @@ namespace WeahetBot
 
         public const string TABS_X_MIN = "tabs/[x]/min";
         public const string TABS_X_MAX = "tabs/[x]/max";
+        public const string TABS_X_I = "tabs/[x]/i";
 
         public const string DAYS_X_SR = "days/[x]/sr";
         public const string DAYS_X_SS = "days/[x]/ss";
@@ -24,6 +24,7 @@ namespace WeahetBot
         public const string DAYS_X_SW_X_TXT = "days/[x]/sw/[0]/txt";
         public const string DAYS_X_SW_X_DESCR = "days/[x]/sw/[0]/descr";
 
+        public const string DAYS_X_HOURS_X_I = "days/[x]/hours/[x]/i";
         public const string DAYS_X_HOURS_X_H = "days/[x]/hours/[x]/h";
         public const string DAYS_X_HOURS_X_T = "days/[x]/hours/[x]/t";
         public const string DAYS_X_HOURS_X_TF = "days/[x]/hours/[x]/tf";
@@ -38,67 +39,12 @@ namespace WeahetBot
 
         public const string ERROR_NO_SUB_FIELD = "ERROR_NO_SUB_FIELD";
 
-        public static void Load_JSON_String(string jsonFile)
-        {
-            //string str = ExtractSubField(ExtractField(jsonFile, "r"), "lat");
-            //string str = ExtractSubField(ExtractField(jsonFile, "r"), "title ");
-            //string str = ExtractField(jsonFile, "days");
-            //str = ExtractSubField(str, "tf");
-            //str = ConstructString_FromUnicode(str);
-            //string str = ExtractIndexedSubField(jsonFile, 6);
-            //str = (ExtractSubField(str, "max"));
-            //Console.WriteLine("\n\n\nS\n" + GetIndexedSubFieldCount(jsonFile));
-            //string str = ExtractField(jsonFile, "tabs");
-
-            //string str = ExtractSubField(ExtractField(jsonFile, "r"), "id");
-            //str = ConstructString_FromUnicode(str);
-
-            //string str = ExtractIndexedSubField(jsonFile, 2);
-            //string str = ExtractIndexedField(jsonFile, "days");
-            //str = ExtractIndexedField(str, "sw");
-            //str = ExtractIndexedSubField(str, 0);
-            //str = ExtractSubField(str, "txt");
-            //str = ConstructString_FromUnicode(str);
-            //str = ExtractSubField(str, "min");
-
-            //string str = GetStringAtPath(jsonFile, "days/[2]/ss");
-
-            //string str = ExtractIndexedField(jsonFile, "days");
-            //str = ExtractIndexedSubField(str, 1);
-            ////str = ExtractSubField(str, "tf");
-            //str = ExtractIndexedField(str, "hours");
-            //str = ExtractIndexedSubField(str, 0);
-            //str = ExtractSubField(str, "h");
-            //str = ExtractSubField(str, "descr");
-            //str = ConstructString_FromUnicode(str);
-
-            string str = GetStringAtPath(jsonFile, "days/[0]/hours/[0]/h");
-
-            Console.WriteLine(str);
-            //Console.WriteLine("\n\n" + ExtractSubField(jsonFile, "tn"));
-            //if (str.Contains("\\u"))
-            //{
-            //    Console.WriteLine("\n" + ConstructString_FromUnicode(str) + "\n\n\n");
-            //}
-            //else
-            //{
-            //    Console.WriteLine(str + "\n\n\n");
-            //}
-
-            //Console.WriteLine((title) + "\n\n\n");
-            //Console.WriteLine(ExtractField(jsonFile, "r") + "\n\n");
-            //Console.WriteLine(ConstructString_FromUnicode(title) + "\n\n\n");
-            //Console.WriteLine(str + "\n\n\n");
-            //Console.WriteLine(jsonFile);
-        }
-
         public static string GetStringAtPath(string sourceString, string jsonPath)
         {
             string[] tokens = jsonPath.Split('/');
 
             bool isBegin = false;
             bool isIndexedField = false;
-            //int fieldIndex = 0;
             string bufferToken = "";
 
             for (int i = 0; i < tokens.Length; i++)
@@ -111,7 +57,6 @@ namespace WeahetBot
 
                         string indexStr = tokens[i].Split('[')[1];
                         indexStr = indexStr.Split(']')[0];
-                        //Console.WriteLine(sourceString);
                         sourceString = ExtractIndexedField(sourceString, bufferToken);
                         sourceString = ExtractIndexedSubField(sourceString, Convert.ToInt32(indexStr));
                         continue;
@@ -125,8 +70,6 @@ namespace WeahetBot
                         }
                         else
                         {
-                            //if (IsNeedToExtractField(sourceString))
-                            //    sourceString = ExtractField(sourceString, tokens[i]);
                             sourceString = sourceString.Substring(sourceString.IndexOf(tokens[i]) - tokens[i].Length);
                             sourceString = ExtractSubField(sourceString, tokens[i]);
                         }
@@ -136,7 +79,6 @@ namespace WeahetBot
                 {
                     if (IsIndexedField(sourceString, tokens[i]))
                     {
-                        //sourceString = ExtractIndexedField(sourceString, tokens[i]);
                         bufferToken = tokens[i];
                         isIndexedField = true;
                     }
@@ -161,10 +103,6 @@ namespace WeahetBot
             {
                 sourceString = ConstructString_FromUnicode(sourceString);
             }
-            //foreach (var item in tokens)
-            //{
-            //    Console.WriteLine(item);
-            //}
             return sourceString;
         }
 
@@ -176,7 +114,6 @@ namespace WeahetBot
 
                 bool isBegin = false;
                 bool isIndexedField = false;
-                //int fieldIndex = 0;
                 string bufferToken = "";
 
                 for (int i = 0; i < tokens.Length; i++)
@@ -189,7 +126,6 @@ namespace WeahetBot
 
                             string indexStr = tokens[i].Split('[')[1];
                             indexStr = indexStr.Split(']')[0];
-                            //Console.WriteLine(sourceString);
                             sourceString = ExtractIndexedField(sourceString, bufferToken);
                             sourceString = ExtractIndexedSubField(sourceString, Convert.ToInt32(indexStr));
                             continue;
@@ -203,8 +139,6 @@ namespace WeahetBot
                             }
                             else
                             {
-                                //if (IsNeedToExtractField(sourceString))
-                                //    sourceString = ExtractField(sourceString, tokens[i]);
                                 sourceString = sourceString.Substring(sourceString.IndexOf(tokens[i]) - tokens[i].Length);
                                 sourceString = ExtractSubField(sourceString, tokens[i]);
                             }
@@ -214,7 +148,6 @@ namespace WeahetBot
                     {
                         if (IsIndexedField(sourceString, tokens[i]))
                         {
-                            //sourceString = ExtractIndexedField(sourceString, tokens[i]);
                             bufferToken = tokens[i];
                             isIndexedField = true;
                         }
@@ -239,10 +172,6 @@ namespace WeahetBot
                 {
                     sourceString = ConstructString_FromUnicode(sourceString);
                 }
-                //foreach (var item in tokens)
-                //{
-                //    Console.WriteLine(item);
-                //}
             }
             catch (Exception e)
             {
@@ -326,9 +255,6 @@ namespace WeahetBot
         public static bool IsIndexedField(string sourceString, string fieldName)
         {
             bool isSquareBracketFound = false;
-            //Console.WriteLine(sourceString.IndexOf("\"" + fieldName + "\""));
-            //Console.WriteLine("\"" + fieldName + "\"");
-            //Console.WriteLine(sourceString);
             sourceString = sourceString.Substring(sourceString.IndexOf("\"" + fieldName + "\""));
             for (int i = 0; i < sourceString.Length; i++)
             {
@@ -415,16 +341,6 @@ namespace WeahetBot
                 splittedStr = splittedStr.Trim(' ');
                 return splittedStr;
             }
-            else
-            {
-                //splittedStr = splittedStr.Substring(splittedStr.IndexOf("\"") + 1);
-                //int lastIndex = splittedStr.LastIndexOf('\"');
-                //splittedStr = splittedStr.Substring(0, lastIndex);
-                //splittedStr = splittedStr.Substring(0, splittedStr.IndexOf("\""));
-            }
-            //Console.WriteLine(splittedStr + "\n\n");
-            //splittedStr = splittedStr.Split(':')[1];
-            //char lastChar = ' ';
             for (int i = 0; i < splittedStr.Length; i++)
             {
                 char ch = splittedStr[i];
@@ -468,28 +384,13 @@ namespace WeahetBot
                     lastChar = ch;
                 }
                 splittedStr = splittedStr.Substring(splitStartIndex, splitEndIndex);
-                //splittedStr = splittedStr.Split('"')[1];
             }
             else
             {
                 splittedStr = splittedStr.Split(',')[0];
             }
-
-            //int startIndex = 0;
-            //int lastIndex = splittedStr.LastIndexOf('\"');
-            //splittedStr = splittedStr.TrimStart('\"');
-            ////splittedStr += '\"';
-            //
-            //for (int i = 0; i < splittedStr.Length; i++)
-            //{
-            //    if (splittedStr[i] == ' ' || splittedStr[i] == '\"')
-            //        startIndex++;
-            //    else break;
-            //}
-            //Console.WriteLine(splittedStr);
             splittedStr = splittedStr.TrimStart('\"');
             return splittedStr + " ";
-            //return splittedStr.Substring(startIndex, lastIndex);
         }
 
         public static string ExtractIndexedField(string sourceString, string indexdFieldName)
@@ -555,8 +456,6 @@ namespace WeahetBot
             }
 
             sourceString = sourceString.Substring(firstBrace, splitIndex - firstBrace);
-            //return sourceString;
-            //Console.WriteLine("\n\n" + sourceString + "\n\n\n");
 
             List<string> allFields = new List<string>();
 
@@ -595,19 +494,8 @@ namespace WeahetBot
                     }
                 }
             }
-            //Console.WriteLine("All fields count: " + allFields.Count);
 
             return allFields[index];
-
-            //string[] subStrings = sourceString.Split('}');
-            //List<string> strings = new List<string>();
-            //for (int i = 0; i < subStrings.Length; i++)
-            //{
-            //    string[] strs = subStrings[i].Split('{');
-            //    if (strs.Length > 1)
-            //        strings.Add(subStrings[i].Split('{')[1]);
-            //}
-            //return "{" + strings[index] + "}";
         }
 
         public static int GetIndexedSubFieldCount(string sourceString)
@@ -683,47 +571,30 @@ namespace WeahetBot
         public static string ConstructString_FromUnicode(string unicodeString)
         {
             string result = "ERROR";
-
-            //unicodeString = unicodeString.Replace("\"", "");
-            //unicodeString += '\\';
-
             List<char> allChars = new List<char>();
             string charString = "";
-            //char lastChar = ' ';
             bool isReadingChar = false;
             for (int i = 0; i < unicodeString.Length; i++)
             {
                 char ch = unicodeString[i];
-                //if (i == unicodeString.Length - 1)
-                //{
-                    if ((ch == 'u' || ch == 'U' || ch == '\\' || (ch >= 48 && ch <= 57) || (ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102)) == false)
-                    {
-                        isReadingChar = false;
-                    charString = charString.Replace("\\u", "0x");
-                    try
-                    {
-                        char newChar = (char)Convert.ToInt32(charString, 16);
-                        allChars.Add(newChar);
-                    }
-                    catch (Exception)
-                    {
-                        //Console.WriteLine("Строка имела неверный формат: " + charString + ". " + e.Message);
-                    }
-                    allChars.Add(ch);
-                    charString = "";
-                        continue;
-                        //if (isReadingChar)
-                        //{
-                        //    //isReadingChar = false;
-                        //    //charString = charString.Replace("\\u", "0x");
-                        //    //char newChar = (char)Convert.ToInt32(charString, 16);
-                        //    //allChars.Add(newChar);
-                        //    //allChars.Add(',');
-                        //    //allChars.Add(' ');
-                        //    //charString = "";
-                        //}
-                    }
-                    else
+                if ((ch == 'u' || ch == 'U' || ch == '\\' || (ch >= 48 && ch <= 57) || (ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102)) == false)
+                {
+                    isReadingChar = false;
+                charString = charString.Replace("\\u", "0x");
+                try
+                {
+                    char newChar = (char)Convert.ToInt32(charString, 16);
+                    allChars.Add(newChar);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Строка имела неверный формат: " + charString + ". " + e.Message);
+                }
+                allChars.Add(ch);
+                charString = "";
+                    continue;
+                }
+                else
                 {
                     if (isReadingChar)
                     {
@@ -755,77 +626,12 @@ namespace WeahetBot
                             isReadingChar = true;
                             charString += ch;
                         }
-                        else allChars.Add(ch);//(char)Convert.ToInt32(ch, 16);
+                        else allChars.Add(ch);
                     }
                 }
-                //charString += ch;
-                //charString = charString.Replace("\\u", "0x");
-                //char newChar = (char)Convert.ToInt32(charString, 16);
-                //allChars.Add(newChar);
-                //break;
-                //}
-
-                //if (ch == '\\')
-                //{
-                //    if (isReadingChar)
-                //    {
-                //        charString = charString.Replace("\\u", "0x");
-                //        char newChar = (char)Convert.ToInt32(charString, 16);
-                //        allChars.Add(newChar);
-                //        charString = "";
-                //    }
-                //    else
-                //    {
-                //        isReadingChar = true;
-                //    }
-                //    charString += '\\';
-                //}
-                //else if (ch == ' ')
-                //{
-                //    if (isReadingChar)
-                //    {
-                //        isReadingChar = false;
-                //        charString = charString.Replace("\\u", "0x");
-                //        char newChar = (char)Convert.ToInt32(charString, 16);
-                //        allChars.Add(newChar);
-                //        allChars.Add(' ');
-                //        charString = "";
-                //    }
-                //}
-                //else if (ch == ',')
-                //{
-                //    if (isReadingChar)
-                //    {
-                //        isReadingChar = false;
-                //        charString = charString.Replace("\\u", "0x");
-                //        char newChar = (char)Convert.ToInt32(charString, 16);
-                //        allChars.Add(newChar);
-                //        allChars.Add(',');
-                //        allChars.Add(' ');
-                //        charString = "";
-                //    }
-                //}
-                //else if (ch == '.')
-                //{
-                //    if (isReadingChar)
-                //    {
-                //        isReadingChar = false;
-                //        charString = charString.Replace("\\u", "0x");
-                //        char newChar = (char)Convert.ToInt32(charString, 16);
-                //        allChars.Add(newChar);
-                //        allChars.Add('.');
-                //        allChars.Add(' ');
-                //        charString = "";
-                //    }
-                //}
-                //else
-                //{
-                //    charString += ch;
-                //}
-                //lastChar = ch;
+               
             }
             result = new string(allChars.ToArray());
-
             return result;
         }
     }

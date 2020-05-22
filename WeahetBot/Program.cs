@@ -7,8 +7,6 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Collections.Generic;
 using WeahetBot;
@@ -34,8 +32,6 @@ namespace WeatherBot
             Bot.OnMessage += BotOnMessageReceived;
             Bot.OnMessageEdited += BotOnMessageReceived;
             Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
-            //Bot.OnInlineQuery += BotOnInlineQueryReceived;
-            //Bot.OnInlineResultChosen += BotOnChosenInlineResultReceived;
             Bot.OnReceiveError += BotOnReceiveError;
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;
@@ -51,75 +47,80 @@ namespace WeatherBot
         {
             string curcase = "";
             Message msg = e.Message;
-            if (msg.Type == MessageType.Text)
+            if ((msg.From.Id == 699429390) || (msg.From.Id == 467423758))
             {
-                if (isWaitingCityName && (msg.Text != "Назад"))
+                if (msg.Type == MessageType.Text)
                 {
-                    isWaitingCityName = false;
-                    await CityNamesID(await MyWebRequest("http://sinoptik.com.ru/api/suggest.php?l=ru&q=" + msg.Text), msg);
-                }
-                else if (isWaitingServiceMessage && (msg.Text != "Назад"))
-                {
-                    isWaitingServiceMessage = false;
-                    await Bot.SendTextMessageAsync(
-                        -1001221331912,
-                        "Тех. проблема #" + msg.MessageId +
-                        "\nID: " + msg.From.Id +
-                        "\nИмя: " + msg.From.FirstName +
-                        "\nФамилия: " + msg.From.LastName +
-                        "\nUsername: " + msg.From.Username +
-                        "\nСодержание: " + msg.Text);
-                    await Bot.SendTextMessageAsync(msg.From.Id, "Ваше сообщение было отправлено разработчику. \nСпасибо за отзыв!", replyMarkup: GetReplyKeyboard(0));
-                }
-                else
-                {
-                    switch (msg.Text)
+                    if (isWaitingCityName && (msg.Text != "Назад"))
                     {
-                        case "/start":
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetReplyKeyboard(0));
-                            break;
-                        case "/feedback":
-                            goto case "Обратная связь";
-                        case "Погода":
-                            isWaitingCityName = true;
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
-                            break;
-                        case "Прогноз":
-                            isWaitingCityName = true;
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
-                            break;
-                        case "Поддержка":
-                            curcase = "Help";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Поддержка:", replyMarkup: GetReplyKeyboard(2));
-                            break;
-                        case "Настройки":
-                            curcase = "Settings";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetReplyKeyboard(1));
-                            break;
-                        case "Обратная связь":
-                            isWaitingServiceMessage = true;
-                            curcase = "Msgtome";
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
-                            break;
-                        case "Справка":
-                            await Info(msg);
-                            break;
-                        case "Назад":
-                            isWaitingCityName = false;
-                            isWaitingServiceMessage = false;
-                            await Bot.SendTextMessageAsync(msg.Chat.Id, "Возвращаемся назад", replyMarkup: Back(curcase));
-                            break;
+                        isWaitingCityName = false;
+                        await CityNamesID(await MyWebRequest("http://sinoptik.com.ru/api/suggest.php?l=ru&q=" + msg.Text), msg);
+                    }
+                    else if (isWaitingServiceMessage && (msg.Text != "Назад"))
+                    {
+                        isWaitingServiceMessage = false;
+                        await Bot.SendTextMessageAsync(
+                            -1001221331912,
+                            "Тех. проблема #" + msg.MessageId +
+                            "\nID: " + msg.From.Id +
+                            "\nИмя: " + msg.From.FirstName +
+                            "\nФамилия: " + msg.From.LastName +
+                            "\nUsername: " + msg.From.Username +
+                            "\nСодержание: " + msg.Text);
+                        await Bot.SendTextMessageAsync(msg.From.Id, "Ваше сообщение было отправлено разработчику. \nСпасибо за отзыв!", replyMarkup: GetReplyKeyboard(0));
+                    }
+                    else
+                    {
+                        switch (msg.Text)
+                        {
+                            case "/start":
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Рад приветствовать тебя " + msg.From.FirstName + msg.From.LastName + " !", replyMarkup: GetReplyKeyboard(0));
+                                break;
+                            case "/feedback":
+                                goto case "Обратная связь";
+                            case "Погода":
+                                isWaitingCityName = true;
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
+                                break;
+                            case "Прогноз":
+                                isWaitingCityName = true;
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Введите город, в котором желаете узнать погоду:", replyMarkup: GetReplyKeyboard(3));
+                                break;
+                            case "Поддержка":
+                                curcase = "Help";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Поддержка:", replyMarkup: GetReplyKeyboard(2));
+                                break;
+                            case "Настройки":
+                                curcase = "Settings";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Настройки бота:", replyMarkup: GetReplyKeyboard(1));
+                                break;
+                            case "Обратная связь":
+                                isWaitingServiceMessage = true;
+                                curcase = "Msgtome";
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Отправьте сообщение с проблемой мне, я передам его создателю.");
+                                break;
+                            case "Справка":
+                                await Info(msg);
+                                break;
+                            case "Назад":
+                                isWaitingCityName = false;
+                                isWaitingServiceMessage = false;
+                                await Bot.SendTextMessageAsync(msg.Chat.Id, "Возвращаемся назад", replyMarkup: Back(curcase));
+                                break;
+                        }
                     }
                 }
-            }
-            else if (msg.Type == MessageType.Location)
-            {
-                string apiRequest = await MyWebRequest("https://sinoptik.com.ru/api/location.php?s=false&lat=" + msg.Location.Latitude + "&lon=" + msg.Location.Longitude);
-                string ID = JSON_API_Decryptor.ExtractSubField(apiRequest, "id");
-                await GetWeather(ID, msg);
+                else if (msg.Type == MessageType.Location)
+                {
+                    string apiRequest = await MyWebRequest("https://sinoptik.com.ru/api/location.php?s=false&lat=" + msg.Location.Latitude + "&lon=" + msg.Location.Longitude);
+                    string ID = JSON_API_Decryptor.ExtractSubField(apiRequest, "id");
+                    await GetWeather(ID, msg);
+                }
+                else
+                    await Bot.SendTextMessageAsync(msg.Chat.Id, "С этим я ещё работать не умею.", replyMarkup: GetReplyKeyboard(0));
             }
             else
-                await Bot.SendTextMessageAsync(msg.Chat.Id, "С этим я ещё работать не умею.", replyMarkup: GetReplyKeyboard(0));
+                await Bot.SendTextMessageAsync(msg.From.Id, "В данный момент, бот в разработке. Возможность обращаться, имеют только Администратор и Тестер!");
         }
 
         private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs e)
@@ -208,28 +209,6 @@ namespace WeatherBot
             else
                 await Bot.SendTextMessageAsync(msg.From.Id, "Сервер sinoptik.com.ru в данный момент не доступен.", replyMarkup: GetReplyKeyboard(0));
         }
-
-        //private static async Task WeatherToday(string apiRequest, Message msg)
-        //{
-        //    //
-
-
-        //    ///////////////////////////////////////////////////////////////////////////////////////////
-        //    //Console.WriteLine(JSON_API_Decryptor.GetStringAtPath(responsemy, "days/[0]/hours/[0]/h"));
-        //    //string sourceString = "";
-        //    //using (FileStream fs = new FileStream("TEST_JSON_CITIES.file", FileMode.Open))
-        //    //{
-        //    //    using (StreamReader sr = new StreamReader(fs))
-        //    //    {
-        //    //        sourceString = sr.ReadToEnd();
-        //    //    }
-        //    //}
-        //    //foreach (string item in JSON_API_Decryptor.GetAllItems(sourceString))
-        //    //{
-        //    //    Console.WriteLine("----------------------------");
-        //    //    Console.WriteLine(item);
-        //    //}
-        //}
 
         private static ReplyKeyboardMarkup GetReplyKeyboard(int key)
         {
